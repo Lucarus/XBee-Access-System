@@ -1,0 +1,70 @@
+{
+    "things": [
+        {  
+            "actions":[  
+                {  
+                    "action":"create",
+                    "parameter":{  
+                        "Vorname":"Lukas",
+                        "Nachname":"Sturm"
+                    }
+                },
+                {  
+                    "action":"create",
+                    "parameter":{  
+                        "Vorname":"Lukas",
+                        "Nachname":"Sturm"
+                    }
+                }
+            ]
+        },
+        {
+            "status":"error",
+            "message": "Kein Benutzer übergeben",
+            "code": "e010" //Kein Benutzer
+        },
+        {
+            "status":"error",
+            "message": "Benutzer bereits vorhanden",
+            "code": "e600" //Benutzer bereits vorhanden
+        },
+        {
+            "status":"error",
+            "message": "Benutzer nicht gefunden",
+            "code": "e404" //Benutzer nicht gefunden
+        },
+        {
+            "status":"error",
+            "message": "Es wurde keine Karte gescannt",
+            "code": "e300" //Keine Karte
+        },
+        {
+            "status":"ok",
+            "benutzer": {
+                "vorname": "*vorname*",
+                "nachname": "*nachname*",
+                "access": 0
+            },
+            "code": "o200" //Benutzer erstellt
+        },
+        {
+            "status":"ok",
+            "benutzer": {
+                "vorname": "*vorname*",
+                "nachname": "*nachname*",
+                "access": 0
+            },
+            "code": "o100" //Benutzer gelöscht
+        },
+        {
+            "status":"ok",
+            "message": "Karte hinzugefügt",
+            "code": "o500" //Karte hinzugefügt
+        },
+        {
+            "status":"ok",
+            "message": "Karte gelöscht",
+            "code": "o700" //Karte gelöscht
+        }
+    ]
+}
