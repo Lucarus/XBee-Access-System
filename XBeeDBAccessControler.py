@@ -14,7 +14,7 @@ class XBeeDBAccessControler:
         if (karte == None):
             conn.close()
             raise LookupError("Karte nicht gefunden")
-        
+
         cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": karte[1]})
 
         benutzer = cur.fetchone()
@@ -52,7 +52,7 @@ class XBeeDBAccessControler:
         cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": userKey})
         foundUser = cur.fetchone()
         if foundUser != None:
-            removedUser = Benutzer(foundUser[0], foundUser[1], foundUser[2], foundUser[3])
+            removedUser = Benutzer(foundUser[0], foundUser[1], foundUser[2], foundUser[3], foundUser[4])
             cur.execute("DELETE FROM benutzer WHERE userKey=:userKey", {"userKey": userKey})
             conn.commit()
             conn.close()
@@ -72,18 +72,21 @@ class XBeeDBAccessControler:
         cur = conn.cursor()
         cur.execute("SELECT * FROM benutzer")
         benutzerList = []
-        for (vorname, nachname, access, userKey) in cur.fetchall():
-            benutzerList.append(Benutzer(vorname, nachname, access, userKey))
+        for (vorname, nachname, access, userKey, gruppen) in cur.fetchall():
+            benutzerList.append(Benutzer(vorname, nachname, access, userKey, gruppen))
         return benutzerList
-            
+
     def addTimestamp(self, bindata):
         conn = sqlite3.connect(self.dbName)
-        cur = conn.cursor()        
-        cur.execute("INSERT INTO accessLog VALUES (?, ?)", (time.time(), bindata))
+        cur = conn.cursor()
+        cur.execute("SELECT userKey from karten WHERE kartenID=:kartenID", {"kartenID": bindata})
+        userKey = cur.fetchone()
+        print(userKey)
+        cur.execute("INSERT INTO accessLog VALUES (?, ?)", (bindata, time.time(), userKey))
         conn.commit()
         conn.close()
 
-    def createUser(self, vorname, nachname, access=0):
+    def createUser(self, vorname, nachname, access, gruppen=""):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
         userKey = self.generateUserKey(vorname, nachname)
@@ -91,15 +94,15 @@ class XBeeDBAccessControler:
         benutzer = cur.fetchone()
 
         if (benutzer == None):
-            cur.execute("INSERT INTO benutzer VALUES (?, ?, ?, ?)", (vorname, nachname, access, userKey))
+            cur.execute("INSERT INTO benutzer VALUES (?, ?, ?, ?, ?)", (vorname, nachname, access, userKey, gruppen))
             conn.commit()
             conn.close()
-            return Benutzer(vorname, nachname, access, userKey)
-        
+            return Benutzer(vorname, nachname, access, userKey, gruppen)
+
         conn.close()
         raise LookupError("Benutzer bereits vorhanden")
 
-    def addCardToUser(self, userKey, bindata):
+    def addCardToUser(self, userKey, bindata, name):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
         cur.execute("SELECT * FROM karten WHERE kartenID=:kartenID", {"kartenID": bindata})
@@ -109,7 +112,7 @@ class XBeeDBAccessControler:
             if (cur.fetchone() == None):
                 conn.close()
                 raise LookupError("Benutzer nicht vorhanden")
-            cur.execute("INSERT INTO karten VALUES (?, ?)", (bindata, userKey))
+            cur.execute("INSERT INTO karten VALUES (?, ?, ?, ?)", (bindata, userKey, name, ""))
             conn.commit()
             conn.close()
             return None
@@ -145,12 +148,14 @@ class Benutzer:
     nachname = ""
     access = 0
     userKey = b''
+    gruppen = ""
     def __str__(self):
         return (self.vorname + " " + self.nachname)
-    def __init__(self, vorname, nachname, access, userKey):
+    def __init__(self, vorname, nachname, access, userKey, gruppen):
         self.vorname = vorname
         self.nachname = nachname
         self.userKey = userKey
         self.access = access
+        self.gruppen = gruppen
     def toJSON(self):
-        return {"vorname": self.vorname, "nachname": self.nachname, "access": self.access, "userKey": self.userKey.hex()}
+        return {"vorname": self.vorname, "nachname": self.nachname, "access": self.access, "userKey": self.userKey.hex(), "gruppen": self.gruppen}

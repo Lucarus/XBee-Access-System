@@ -6,12 +6,11 @@ from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer
 dbAccessControler = XBeeDBAccessControler("accessControl.db")
 
 # Variabeln für das arbeiten mit dem Thread
-nextInstruction = {"action": "justStarted", "parameter": {"vorname": "", "nachname": ""}}
-cardReceiver = {"vorname": "test", "nachname": ""}
+nextInstruction = {"action": "justStarted", "parameter": {"vorname": "", "nachname": "", "kartenname": ""}}
 cardResponse = {"responce": "NIX"}
 
 def dataReceived(data):
-    recData = data['rf_data'] 
+    recData = data['rf_data']
     if (recData[0] == 0x11):
         # Karte wurde gelesen
         # karten ID aus den übergebenen Bytes extrahieren (an 1. Stelle steht die Art des Pakets)
@@ -75,6 +74,7 @@ def checkForData():
         if nextInstruction['action'] == "addCard":
             nextInstruction['parameter']['vorname'] = actionJSON['parameter']['vorname']
             nextInstruction['parameter']['nachname'] = actionJSON['parameter']['nachname']
+            nextInstruction['parameter']['kartenname'] = actionJSON['parameter']['kartenname']
 
         # Soll eine vorherige instruktion abgebrochen werden (Timeout)
         if nextInstruction['action'] == "stopAddCard" or nextInstruction['action'] == "stopRemoveCard":

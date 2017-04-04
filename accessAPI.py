@@ -34,9 +34,9 @@ def createBenutzer():
     access = request.json.get('Access')
     if (vorname == None) or (nachname == None) or (access == None):
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
-    
+
     try:
-        user = dbAccessControler.createUser(vorname, nachname, access)
+        user = dbAccessControler.createUser(vorname, nachname, access, )
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e600"}
     return {'status': "ok", 'benutzer': user.toJSON()}
@@ -63,19 +63,26 @@ def deleteUser():
 def addKarte():
     vorname = request.json.get('Vorname')
     nachname = request.json.get('Nachname')
+    cardName = request.json.get('Kartenname')
+
+    gruppenKey = request.json.get('Gruppenkey')
 
     if (vorname == None) or (nachname == None):
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
+    if cardName == None:
+        return {'status': "error", 'message': "Kein Kartenname übergeben", 'code': "e020"}
 
     #überprüfen, ob der nutzer vorhanden ist
+    #Gruppe auch testn
     try:
         dbAccessControler.getUser(vorname, nachname)
+        #dbAccessControler.getGroup(gruppenKey)
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e404"}
-    
+
     # action für XBeeReceiver erstellen
     action = open("action.json", mode='w')
-    action.write('''{"action":"addCard","parameter":{"vorname":"%(vorname)s","nachname":"%(nachname)s"}}''' % {"vorname": vorname, "nachname": nachname})
+    action.write('''{"action":"addCard","parameter":{"vorname":"%(vorname)s","nachname":"%(nachname)s","kartenname": "%(kartenname)s"}}''' % {"vorname": vorname, "nachname": nachname, "kartenname": cardName})
     action.close()
 
     # auf antwort warten
