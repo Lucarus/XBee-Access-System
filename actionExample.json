@@ -1,17 +1,17 @@
 {
     "things": [
-        {  
-            "actions":[  
-                {  
+        {
+            "actions":[
+                {
                     "action":"create",
-                    "parameter":{  
+                    "parameter":{
                         "Vorname":"Lukas",
                         "Nachname":"Sturm"
                     }
                 },
                 {  
                     "action":"create",
-                    "parameter":{  
+                    "parameter":{
                         "Vorname":"Lukas",
                         "Nachname":"Sturm"
                     }
@@ -22,6 +22,11 @@
             "status":"error",
             "message": "Kein Benutzer übergeben",
             "code": "e010" //Kein Benutzer
+        },
+        {
+            "status":"error",
+            "message": "Kein Kartenname übergeben",
+            "code": "e020" //Kein Benutzer
         },
         {
             "status":"error",
