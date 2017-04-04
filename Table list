@@ -1,0 +1,24 @@
+
+
+
+
+
+benutzer:
+  vorname, nachname, accessGranted, userKey, gruppen | primary == userKey
+
+karten:
+  kartenID, userKey, name, gruppen  | primary == kartenID
+
+accessLog:
+  kartenID, timestamp, userKey
+
+gruppen:
+  name, gruppenKey | primary == gruppenKey
+
+zugriffsZeiten:
+  name, gruppenKey, startTime, stopTime
+
+
+
+Eigenen API aufruf, wenn eine Gruppe zu karte / User hinzugefügt wird
+Karte bei addKarte zurückgeben
