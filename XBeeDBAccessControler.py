@@ -23,12 +23,12 @@ class XBeeDBAccessControler:
             raise LookupError("Kein Benutzer zur Karte gefunden")
 
         conn.close()
-        return Benutzer(benutzer[0], benutzer[1], benutzer[2], benutzer[3])
+        return Benutzer(benutzer[0], benutzer[1], benutzer[2], benutzer[3], benutzer[4])
 
     def getUser(self, vorname, nachname):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
-        cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": self.generateUserKey(vorname, nachname)})
+        cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": self.generateKey(vorname, nachname)})
         user = cur.fetchone()
         if (user == None):
             raise LookupError("Benutzer nicht vorhanden")
@@ -52,11 +52,10 @@ class XBeeDBAccessControler:
         cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": userKey})
         foundUser = cur.fetchone()
         if foundUser != None:
-            removedUser = Benutzer(foundUser[0], foundUser[1], foundUser[2], foundUser[3], foundUser[4])
             cur.execute("DELETE FROM benutzer WHERE userKey=:userKey", {"userKey": userKey})
             conn.commit()
             conn.close()
-            return removedUser
+            return Benutzer(foundUser[0], foundUser[1], foundUser[2], foundUser[3], foundUser[4])
         conn.close()
         raise LookupError("Benutzer nicht gefunden")
 
@@ -82,14 +81,14 @@ class XBeeDBAccessControler:
         cur.execute("SELECT userKey from karten WHERE kartenID=:kartenID", {"kartenID": bindata})
         userKey = cur.fetchone()
         print(userKey)
-        cur.execute("INSERT INTO accessLog VALUES (?, ?)", (bindata, time.time(), userKey))
+        cur.execute("INSERT INTO accessLog VALUES (?, ?, ?)", (bindata, time.time(), userKey))
         conn.commit()
         conn.close()
 
     def createUser(self, vorname, nachname, access, gruppen=""):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
-        userKey = self.generateUserKey(vorname, nachname)
+        userKey = self.generateKey(vorname, nachname)
         cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey",{"userKey": userKey})
         benutzer = cur.fetchone()
 
@@ -101,6 +100,70 @@ class XBeeDBAccessControler:
 
         conn.close()
         raise LookupError("Benutzer bereits vorhanden")
+
+    def createGroup(self, name):
+        gruppenKey = self.generateKey(name)
+
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM gruppen WHERE gruppenKey=:gruppenKey", {"gruppenKey": gruppenKey})
+        if cur.fetchone() != None:
+            conn.close()
+            raise LookupError("Gruppe bereits vorhanden")
+        cur.execute("INSERT INTO gruppen VALUES (?, ?)", (name, gruppenKey))
+        conn.commit()
+        conn.close()
+        return Gruppe(name, gruppenKey)
+
+    def removeGroup(self, gruppenKey):
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM gruppen WHERE gruppenKey=:gruppenKey", {"gruppenKey": gruppenKey})
+        name = cur.fetchone()
+        if name == None:
+            conn.close()
+            raise LookupError("Gruppe nicht gefunden")
+        name = name[0]
+        cur.execute("DELETE FROM gruppen WHERE gruppenKey=:gruppenKey", {"gruppenKey": gruppenKey})
+        conn.commit()
+        conn.close()
+        return Gruppe(name, gruppenKey)
+
+    # da es eh immer nur einen namen geben kann
+    def getGroup(self, gruppenKey):        
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM gruppen WHERE gruppenKey=:gruppenKey", {"gruppenKey": gruppenKey})
+        foundGroup = cur.fetchone()
+        if foundGroup == None:
+            conn.close()
+            raise LookupError("Gruppe nicht gefunden")
+        conn.commit()
+        conn.close()
+        return Gruppe(foundGroup[0], gruppenKey)
+        
+    def getAllGroups(self):
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM gruppen")
+        foundGroups = cur.fetchall()
+
+        gefundeneGruppen = []
+        for (name, gruppenKey) in foundGroups:
+            gefundeneGruppen.append(Gruppe(name, gruppenKey))
+
+        conn.commit()
+        conn.close()
+        return gefundeneGruppen
+
+    def updateUser(self):
+        raise NotImplementedError
+
+    def updateCard(self):
+        raise NotImplementedError
+
+    def updateGroup(self):
+        raise NotImplementedError
 
     def addCardToUser(self, userKey, bindata, name):
         conn = sqlite3.connect(self.dbName)
@@ -120,9 +183,9 @@ class XBeeDBAccessControler:
         conn.close()
         raise LookupError("Karte bereits registriert")
 
-    def generateUserKey(self, vorname, nachname):
-        userKey = hashlib.md5(bytes((vorname + "" + nachname).encode()))
-        return userKey.digest()
+    def generateKey(self, vorname, nachname=""):
+        hashKey = hashlib.md5(bytes((vorname + "" + nachname).encode()))
+        return hashKey.digest()
 
     def createDB(self):
         conn = sqlite3.connect(self.dbName)
@@ -159,3 +222,14 @@ class Benutzer:
         self.gruppen = gruppen
     def toJSON(self):
         return {"vorname": self.vorname, "nachname": self.nachname, "access": self.access, "userKey": self.userKey.hex(), "gruppen": self.gruppen}
+
+class Gruppe:
+    name = ""
+    gruppenKey = b''
+
+    def __init__(self, name, gruppenKey):
+        self.name = name
+        self.gruppenKey = gruppenKey
+
+    def toJSON(self):
+        return {"name": self.name, "gruppenKey": self.gruppenKey.hex()}

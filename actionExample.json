@@ -30,8 +30,18 @@
         },
         {
             "status":"error",
+            "message": "Kein Gruppenname übergeben",
+            "code": "e030" //Kein Benutzer
+        },
+        {
+            "status":"error",
             "message": "Benutzer bereits vorhanden",
             "code": "e600" //Benutzer bereits vorhanden
+        },
+        {
+            "status":"error",
+            "message": "Gruppe bereits vorhanden",
+            "code": "e500" //Benutzer bereits vorhanden
         },
         {
             "status":"error",
@@ -40,8 +50,29 @@
         },
         {
             "status":"error",
+            "message": "Gruppe nicht gefunden",
+            "code": "e504" //Gruppe nicht gefunden
+        },
+        {
+            "status":"error",
             "message": "Es wurde keine Karte gescannt",
             "code": "e300" //Keine Karte
+        },
+        {
+            "status":"ok",
+            "benutzer": {
+                "name": "*name*",
+                "gruppenKey": "*key*"
+            },
+            "code": "o400" //Gruppe erstellt
+        },
+        {
+            "status":"ok",
+            "benutzer": {
+                "name": "*name*",
+                "gruppenKey": "*key*"
+            },
+            "code": "o300" //Gruppe erstellt
         },
         {
             "status":"ok",

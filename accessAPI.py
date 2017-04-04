@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 from passlib.hash import sha256_crypt
 from bottle import run, get, post, request, template, delete, auth_basic, route
-from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer
+from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer, Gruppe
 
 # Instanz eines DB Controlers erstellen
 dbAccessControler = XBeeDBAccessControler("accessControl.db")
@@ -58,7 +58,7 @@ def deleteUser():
 
 # Karten werden überarbeitet
 
-@post('/benutzer/card')
+@post('/cards')
 @auth_basic(checkAuth)
 def addKarte():
     vorname = request.json.get('Vorname')
@@ -107,7 +107,7 @@ def addKarte():
         return responseJSON
     return {'status': "ok", 'message': "Karte hinzugefügt", 'code': "o500"}
 
-@delete('/benutzer/card')
+@delete('/cards')
 @auth_basic(checkAuth)
 def deleteCard():
     # action für XBeeReceiver erstellen
@@ -130,5 +130,47 @@ def deleteCard():
 
     os.remove("response.json")
     return {'status': "ok", 'message': "Karte gelöscht", 'code': "o700"}
+
+@get('/cards')
+@auth_basic(checkAuth)
+def getUserCards():
+    raise NotImplementedError()
+
+@get('/groups')
+@auth_basic(checkAuth)
+def getGroups():
+    groupDictionary = []
+    for group in dbAccessControler.getAllGroups():
+        groupDictionary.append(group.toJSON())
+    return {'gruppen' : groupDictionary}
+
+@post('/groups')
+@auth_basic(checkAuth)
+def createGroup():
+    name = request.json.get('Name')
+    
+    if (name == None):
+        return {'status': "error", 'message': "Kein Gruppenname übergeben", 'code': "e030"}
+
+    try:
+        group = dbAccessControler.createGroup(name)
+    except LookupError as error:
+        return {'status': "error", 'message': str(error), 'code': "e500"}
+    return {'status': "ok", 'gruppe': group.toJSON(), "code": "o400"}
+
+@delete('/groups')
+@auth_basic(checkAuth)
+def deleteGroup():
+    name = request.json.get('Name')
+
+    if (name == None):
+        return {'status': "error", 'message': "Kein Gruppenname übergeben", 'code': "e030"}
+
+    try:
+        deletedGroup = dbAccessControler.removeGroup(dbAccessControler.generateKey(name))
+    except LookupError as error:
+        return {'status': "error", 'message': str(error), 'code': "e504"}
+    return {'status': "ok", 'gruppe': deletedGroup.toJSON(), 'code': "o300"}
+
 
 run(host='localhost', port=80, reloader=True)
