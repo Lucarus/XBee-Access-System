@@ -148,7 +148,7 @@ def getGroups():
 @auth_basic(checkAuth)
 def createGroup():
     name = request.json.get('Name')
-    
+
     if (name == None):
         return {'status': "error", 'message': "Kein Gruppenname übergeben", 'code': "e030"}
 
@@ -172,5 +172,19 @@ def deleteGroup():
         return {'status': "error", 'message': str(error), 'code': "e504"}
     return {'status': "ok", 'gruppe': deletedGroup.toJSON(), 'code': "o300"}
 
+@get('/accesstimes')
+@auth_basic(checkAuth)
+    def getAllAccesstimes():
+        raise NotImplementedError()
+
+@post('/accesstimes')
+@auth_basic(checkAuth)
+    def createAccesstime():
+        raise NotImplementedError()
+
+@delete('/accesstimes')
+@auth_basic(checkAuth)
+    def removeAccesstime():
+        raise NotImplementedError()
 
 run(host='localhost', port=80, reloader=True)
