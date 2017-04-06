@@ -32,11 +32,23 @@ def createBenutzer():
     vorname = request.json.get('Vorname')
     nachname = request.json.get('Nachname')
     access = request.json.get('Access')
+    groupNames = request.json.get('Gruppen')
+
     if (vorname == None) or (nachname == None) or (access == None):
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
+    if (groupNames != None):
+        # überprüfen, ob gruppen vorhanden sind !!!! wichtig
+
+        groupNames = str(groupNames).replace("'", "")
+        groupNames.replace("[", "")
+        groupNames.replace("]", "")
+    else:
+        groupNames = ""
+
+    print(groupNames)
 
     try:
-        user = dbAccessControler.createUser(vorname, nachname, access, )
+        user = dbAccessControler.createUser(vorname, nachname, access, groupNames)
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e600"}
     return {'status': "ok", 'benutzer': user.toJSON()}
@@ -174,17 +186,17 @@ def deleteGroup():
 
 @get('/accesstimes')
 @auth_basic(checkAuth)
-    def getAllAccesstimes():
-        raise NotImplementedError()
+def getAllAccesstimes():
+    raise NotImplementedError()
 
 @post('/accesstimes')
 @auth_basic(checkAuth)
-    def createAccesstime():
-        raise NotImplementedError()
+def createAccesstime():
+    raise NotImplementedError()
 
 @delete('/accesstimes')
 @auth_basic(checkAuth)
-    def removeAccesstime():
-        raise NotImplementedError()
+def removeAccesstime():
+    raise NotImplementedError()
 
 run(host='localhost', port=80, reloader=True)

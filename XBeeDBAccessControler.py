@@ -93,7 +93,7 @@ class XBeeDBAccessControler:
         benutzer = cur.fetchone()
 
         if (benutzer == None):
-            cur.execute("INSERT INTO benutzer VALUES (?, ?, ?, ?, ?)", (vorname, nachname, access, userKey, gruppen))
+            cur.execute("INSERT INTO benutzer VALUES (?, ?, ?, ?, ?)", (vorname, nachname, access, userKey, str(gruppen)))
             conn.commit()
             conn.close()
             return Benutzer(vorname, nachname, access, userKey, gruppen)
@@ -130,7 +130,7 @@ class XBeeDBAccessControler:
         return Gruppe(name, gruppenKey)
 
     # da es eh immer nur einen namen geben kann
-    def getGroup(self, gruppenKey):        
+    def getGroup(self, gruppenKey):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
         cur.execute("SELECT * FROM gruppen WHERE gruppenKey=:gruppenKey", {"gruppenKey": gruppenKey})
@@ -141,7 +141,7 @@ class XBeeDBAccessControler:
         conn.commit()
         conn.close()
         return Gruppe(foundGroup[0], gruppenKey)
-        
+
     def getAllGroups(self):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
