@@ -35,13 +35,24 @@
         },
         {
             "status":"error",
+            "message": "Gruppe nicht gefunden",
+            "group": "gruppeName",
+            "code": "e040" //Kein Benutzer
+        },
+        {
+            "status":"error",
             "message": "Benutzer bereits vorhanden",
             "code": "e600" //Benutzer bereits vorhanden
         },
         {
             "status":"error",
             "message": "Gruppe bereits vorhanden",
-            "code": "e500" //Benutzer bereits vorhanden
+            "code": "e500" //Gruppe bereits vorhanden
+        },
+        {
+            "status":"error",
+            "message": "Karte bereits vorhanden",
+            "code": "e700" //Karte bereits vorhanden
         },
         {
             "status":"error",
@@ -95,6 +106,12 @@
         {
             "status":"ok",
             "message": "Karte hinzugefügt",
+            "karte": {
+                "name": "'name'",
+                "userKey": "",
+                "kartenID": "",
+                "gruppen": ["", ""]
+            },
             "code": "o500" //Karte hinzugefügt
         },
         {
