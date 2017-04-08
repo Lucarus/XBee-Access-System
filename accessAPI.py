@@ -4,8 +4,8 @@ import os.path
 import json
 from datetime import datetime, timezone
 from passlib.hash import sha256_crypt
-from bottle import run, get, post, request, template, delete, auth_basic, route
-from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer, Gruppe
+from bottle import run, get, post, put, request, template, delete, auth_basic, route
+from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer, Gruppe, Karte
 
 # Instanz eines DB Controlers erstellen
 dbAccessControler = XBeeDBAccessControler("accessControl.db")
@@ -38,10 +38,11 @@ def createBenutzer():
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
     if (groupNames != None):
         # überprüfen, ob gruppen vorhanden sind !!!! wichtig
-
-        groupNames = str(groupNames).replace("'", "")
-        groupNames.replace("[", "")
-        groupNames.replace("]", "")
+        for gruppe in groupNames:
+            try:
+                dbAccessControler.getGroup(dbAccessControler.generateKey(gruppe));
+            except LookupError as error:
+                return {'status': "error", 'message': str(error), 'code': "e040", 'group': gruppe}
     else:
         groupNames = ""
 
@@ -76,13 +77,33 @@ def addKarte():
     vorname = request.json.get('Vorname')
     nachname = request.json.get('Nachname')
     cardName = request.json.get('Kartenname')
-
-    gruppenKey = request.json.get('Gruppenkey')
+    groupNames = request.json.get('Gruppen')
 
     if (vorname == None) or (nachname == None):
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
     if cardName == None:
         return {'status': "error", 'message': "Kein Kartenname übergeben", 'code': "e020"}
+
+    # Kartenname abfragen
+    foundCard = None
+    try:
+        foundCard = dbAccessControler.getCard(cardName)
+    except LookupError as error:
+        None
+        # Fehler bedeutet, alles is in Ordnung ^^
+
+    if foundCard != None:
+        return {'status': "error", 'message':"Karte bereits vorhanden", 'code': "e700"}
+
+    # Gruppen abfragen
+    if groupNames != None:
+        for gruppe in groupNames:
+            try:
+                dbAccessControler.getGroup(dbAccessControler.generateKey(gruppe));
+            except LookupError as error:
+                return {'status': "error", 'message': str(error), 'code': "e040", 'group': gruppe}
+    else:
+        groupNames = ""
 
     #überprüfen, ob der nutzer vorhanden ist
     #Gruppe auch testn
@@ -93,8 +114,8 @@ def addKarte():
         return {'status': "error", 'message': str(error), 'code': "e404"}
 
     # action für XBeeReceiver erstellen
-    action = open("action.json", mode='w')
-    action.write('''{"action":"addCard","parameter":{"vorname":"%(vorname)s","nachname":"%(nachname)s","kartenname": "%(kartenname)s"}}''' % {"vorname": vorname, "nachname": nachname, "kartenname": cardName})
+    action = open("action.json", mode='w', encoding="UTF_8")
+    action.write('''{"action":"addCard","parameter":{"vorname":"%(vorname)s","nachname":"%(nachname)s","kartenname": "%(kartenname)s", "gruppen": "%(gruppen)s"}}''' % {"vorname": vorname, "nachname": nachname, "kartenname": cardName, "gruppen": groupNames})
     action.close()
 
     # auf antwort warten
@@ -117,7 +138,7 @@ def addKarte():
 
     if responseJSON['status'] == "error":
         return responseJSON
-    return {'status': "ok", 'message': "Karte hinzugefügt", 'code': "o500"}
+    return {'status': "ok", 'message': "Karte hinzugefügt", 'code': "o500", 'karte': responseJSON['karte']}
 
 @delete('/cards')
 @auth_basic(checkAuth)
@@ -183,6 +204,16 @@ def deleteGroup():
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e504"}
     return {'status': "ok", 'gruppe': deletedGroup.toJSON(), 'code': "o300"}
+
+@put('/benutzer')
+@auth_basic(checkAuth)
+def getAllAccesstimes():
+    raise NotImplementedError()
+
+@put('/card')
+@auth_basic(checkAuth)
+def createAccesstime():
+    raise NotImplementedError()
 
 @get('/accesstimes')
 @auth_basic(checkAuth)

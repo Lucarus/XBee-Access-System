@@ -33,7 +33,7 @@ class XBeeDBAccessControler:
         if (user == None):
             raise LookupError("Benutzer nicht vorhanden")
 
-        return Benutzer(user[0], user[1], user[2], user[3])
+        return Benutzer(user[0], user[1], user[2], user[3], user[4])
 
     def getUserCards(self, userKey):
         conn = sqlite3.connect(self.dbName)
@@ -165,7 +165,7 @@ class XBeeDBAccessControler:
     def updateGroup(self):
         raise NotImplementedError
 
-    def addCardToUser(self, userKey, bindata, name):
+    def addCardToUser(self, userKey, bindata, name, gruppen):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
         cur.execute("SELECT * FROM karten WHERE kartenID=:kartenID", {"kartenID": bindata})
@@ -175,13 +175,24 @@ class XBeeDBAccessControler:
             if (cur.fetchone() == None):
                 conn.close()
                 raise LookupError("Benutzer nicht vorhanden")
-            cur.execute("INSERT INTO karten VALUES (?, ?, ?, ?)", (bindata, userKey, name, ""))
+            cur.execute("INSERT INTO karten VALUES (?, ?, ?, ?)", (bindata, userKey, name, gruppen))
             conn.commit()
             conn.close()
-            return None
+            return Karte(bindata, userKey, name, gruppen)
 
         conn.close()
         raise LookupError("Karte bereits registriert")
+
+    def getCard(self, name):
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM karten WHERE name=:name", {"name": name})
+        karte = cur.fetchone()
+        if (karte != None):
+            conn.close()
+            return Karte(karte[0], karte[1], karte[2], karte[3])
+        conn.close()
+        raise LookupError("Karte nicht vorhanden")
 
     def generateKey(self, vorname, nachname=""):
         hashKey = hashlib.md5(bytes((vorname + "" + nachname).encode()))
@@ -233,3 +244,22 @@ class Gruppe:
 
     def toJSON(self):
         return {"name": self.name, "gruppenKey": self.gruppenKey.hex()}
+
+class Karte:
+    name = ""
+    kartenID = b''
+    userKey = b''
+    gruppen = ""
+
+    def __init__(self, kartenID, userKey, name, gruppen):
+        self.name = name
+        self.kartenID = kartenID
+        self.userKey = userKey
+        self.gruppen = gruppen
+
+    def toJSON(self):
+        return {"name": self.name, "kartenID": self.kartenID.hex(), "userKey": self.userKey.hex(), "gruppen": self.gruppen}
+
+    def toJSONString(self):
+        return '"name": "%(name)s", "kartenID": "%(kartenID)s", "userKey": "%(userKey)s","gruppen": %(gruppen)s' %{"name": self.name, "kartenID": self.kartenID.hex(), "userKey": self.userKey.hex(), "gruppen": self.gruppen.replace("'", '"')}
+        

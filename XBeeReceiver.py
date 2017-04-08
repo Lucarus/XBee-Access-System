@@ -1,12 +1,12 @@
 import serial, time, sys, os.path, json
 from xbee import ZigBee
-from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer
+from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer, Karte, Gruppe
 
 # Instanz eines DB Controlers erstellen
 dbAccessControler = XBeeDBAccessControler("accessControl.db")
 
 # Variabeln für das arbeiten mit dem Thread
-nextInstruction = {"action": "justStarted", "parameter": {"vorname": "", "nachname": "", "kartenname": ""}}
+nextInstruction = {"action": "justStarted", "parameter": {"vorname": "", "nachname": "", "kartenname": "", "gruppen": ""}}
 cardResponse = {"responce": "NIX"}
 
 def dataReceived(data):
@@ -16,15 +16,18 @@ def dataReceived(data):
         # karten ID aus den übergebenen Bytes extrahieren (an 1. Stelle steht die Art des Pakets)
         cardID = recData[1:]
         if nextInstruction['action'] == 'addCard':
+            print("Adding....")
             # Karte zu einem Benutzer hinzufügen
             try:
                 # Karten ID in der Datenbank speichern
-                dbAccessControler.addCardToUser(dbAccessControler.generateUserKey(nextInstruction['parameter']['vorname'], nextInstruction['parameter']['nachname']),cardID)
+                newCard = dbAccessControler.addCardToUser(dbAccessControler.generateKey(nextInstruction['parameter']['vorname'], nextInstruction['parameter']['nachname']),cardID,nextInstruction['parameter']['kartenname'], nextInstruction['parameter']['gruppen'])
                 # response erstellen
-                cardResponse['responce'] = '''{"status": "ok"}'''
+                cardResponse['responce'] = '''{"status": "ok", "karte": {%(karte)s}}''' %{"karte": newCard.toJSONString()}
             except LookupError as error:
                 # fehler erstellen falls fehler aufgetreten
                 cardResponse['responce'] = '''{"status": "error", "message": "%(message)s"}''' %{"message": str(error)}
+            except:
+                print ("Unexpected error:", sys.exc_info())
 
             # instruktion wieder zurück setzen
             nextInstruction['action'] = "justAddedCard"
@@ -75,6 +78,7 @@ def checkForData():
             nextInstruction['parameter']['vorname'] = actionJSON['parameter']['vorname']
             nextInstruction['parameter']['nachname'] = actionJSON['parameter']['nachname']
             nextInstruction['parameter']['kartenname'] = actionJSON['parameter']['kartenname']
+            nextInstruction['parameter']['gruppen'] = actionJSON['parameter']['gruppen']
 
         # Soll eine vorherige instruktion abgebrochen werden (Timeout)
         if nextInstruction['action'] == "stopAddCard" or nextInstruction['action'] == "stopRemoveCard":
@@ -86,7 +90,7 @@ def checkForData():
 def writeResponse():
     # wurde eine Instruktion durchgeführt wird die response in eine Datei geschrieben um dem Fronted die änderung mitzuteilen
     if cardResponse['responce'] != "NIX":
-        myResponse = open("response.json", mode='w')
+        myResponse = open("response.json", mode='w', encoding="UTF_8")
         myResponse.write(cardResponse['responce'])
         myResponse.close()
         cardResponse['responce'] = "NIX"
