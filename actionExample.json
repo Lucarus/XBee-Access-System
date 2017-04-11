@@ -101,6 +101,15 @@
                 "nachname": "*nachname*",
                 "access": 0
             },
+            "code": "o202" //Benutzer aktuallisiert
+        },
+        {
+            "status":"ok",
+            "benutzer": {
+                "vorname": "*vorname*",
+                "nachname": "*nachname*",
+                "access": 0
+            },
             "code": "o100" //Benutzer gelöscht
         },
         {

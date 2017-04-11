@@ -52,7 +52,7 @@ def createBenutzer():
         user = dbAccessControler.createUser(vorname, nachname, access, groupNames)
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e600"}
-    return {'status': "ok", 'benutzer': user.toJSON()}
+    return {'status': "ok", 'benutzer': user.toJSON(), 'code': "o200"}
 
 @delete('/benutzer')
 @auth_basic(checkAuth)
@@ -208,7 +208,30 @@ def deleteGroup():
 @put('/benutzer')
 @auth_basic(checkAuth)
 def getAllAccesstimes():
-    raise NotImplementedError()
+    vorname = request.json.get('Vorname')
+    nachname = request.json.get('Nachname')
+    access = request.json.get('Access')
+    groupNames = request.json.get('Gruppen')
+
+    if (vorname == None) or (nachname == None) or (access == None):
+        return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
+    if (groupNames != None):
+        # überprüfen, ob gruppen vorhanden sind !!!! wichtig
+        for gruppe in groupNames:
+            try:
+                dbAccessControler.getGroup(dbAccessControler.generateKey(gruppe));
+            except LookupError as error:
+                return {'status': "error", 'message': str(error), 'code': "e040", 'group': gruppe}
+    else:
+        groupNames = ""
+
+    print(groupNames)
+
+    try:
+        user = dbAccessControler.updateUser(vorname, nachname, access, groupNames)
+    except LookupError as error:
+        return {'status': "error", 'message': str(error), 'code': "e404"}
+    return {'status': "ok", 'benutzer': user.toJSON(), 'code': "o202"}
 
 @put('/card')
 @auth_basic(checkAuth)

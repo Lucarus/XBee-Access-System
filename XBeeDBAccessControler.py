@@ -156,9 +156,21 @@ class XBeeDBAccessControler:
         conn.close()
         return gefundeneGruppen
 
-    def updateUser(self):
-        raise NotImplementedError
-
+    def updateUser(self, vorname, nachname, access, gruppen=""):
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        userKey = self.generateKey(vorname, nachname)
+        cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey",{"userKey": userKey})
+        benutzer = cur.fetchone()
+        if (benutzer == None):
+            conn.close()
+            raise LookupError("Benutzer nicht gefunden")
+        
+        cur.execute("UPDATE benutzer SET accessGranted=:accessGranted, gruppen=:gruppen WHERE userKey=:userKey", {"accessGranted": access, "gruppen": gruppen, "userKey": userKey})
+        conn.commit()
+        conn.close()
+        return Benutzer(vorname, nachname, access, userKey, gruppen)
+        
     def updateCard(self):
         raise NotImplementedError
 
