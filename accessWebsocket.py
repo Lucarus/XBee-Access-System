@@ -12,7 +12,12 @@ async def time(websocket, path):
             await websocket.send(scannedFile)
         await asyncio.sleep(1)
 
-start_server = websockets.serve(time, '127.0.0.1', 5678)
+host = '127.0.0.1'
+#check for IP
+if (len(sys.argv) == 2):
+    host = sys.argv[1]
+
+start_server = websockets.serve(time, host, 5678)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

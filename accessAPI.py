@@ -258,4 +258,9 @@ def createAccesstime():
 def removeAccesstime():
     raise NotImplementedError()
 
-run(host='localhost', port=80, reloader=True)
+host = 'localhost'
+#check for IP
+if (len(sys.argv) == 2):
+    host = sys.argv[1]
+
+run(host=host, port=80, reloader=True)

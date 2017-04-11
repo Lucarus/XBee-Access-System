@@ -109,8 +109,16 @@ def writeResponse():
         myResponse.close()
         cardResponse['responce'] = "NIX"
 
+port = None
+#check for Comport
+if (len(sys.argv) == 2):
+    port = sys.argv[1]
+else:
+    print("COM-Port angeben !")
+    sys.exit(0)
+
 # XBee initialisieren
-serialConn = serial.Serial("COM8", 9600)
+serialConn = serial.Serial(port, 9600)
 xbee = ZigBee(serialConn, callback=dataReceived)
 
 while True:
