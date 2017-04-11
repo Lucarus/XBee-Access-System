@@ -63,7 +63,7 @@ def deleteUser():
         return {'status': "error", 'message': "Kein Benutzer übergeben", 'code': "e010"}
 
     try:
-        deletedUser = dbAccessControler.removeUser(dbAccessControler.generateUserKey(vorname, nachname))
+        deletedUser = dbAccessControler.removeUser(dbAccessControler.generateKey(vorname, nachname))
     except LookupError as error:
         return {'status': "error", 'message': str(error), 'code': "e404"}
     return {'status': "ok", 'benutzer': deletedUser.toJSON(), 'code': "o100"}
@@ -213,6 +213,11 @@ def getAllAccesstimes():
 @put('/card')
 @auth_basic(checkAuth)
 def createAccesstime():
+    raise NotImplementedError()
+
+@put('/accesstimes')
+@auth_basic(checkAuth)
+def getAllAccesstimes():
     raise NotImplementedError()
 
 @get('/accesstimes')
