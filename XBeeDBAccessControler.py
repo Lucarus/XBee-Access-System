@@ -2,6 +2,7 @@ import sqlite3
 import serial
 import time
 import hashlib
+import codecs
 
 class XBeeDBAccessControler:
     dbName = "accessControl.db"
@@ -80,8 +81,7 @@ class XBeeDBAccessControler:
         cur = conn.cursor()
         cur.execute("SELECT userKey from karten WHERE kartenID=:kartenID", {"kartenID": bindata})
         userKey = cur.fetchone()
-        print(userKey)
-        cur.execute("INSERT INTO accessLog VALUES (?, ?, ?)", (bindata, time.time(), userKey))
+        cur.execute("INSERT INTO accessLog VALUES (?, ?, ?)", (bindata, time.time(), userKey[0]))
         conn.commit()
         conn.close()
 
@@ -165,6 +165,9 @@ class XBeeDBAccessControler:
     def updateGroup(self):
         raise NotImplementedError
 
+    def updateAccessTime(self):
+        raise NotImplementedError
+
     def addCardToUser(self, userKey, bindata, name, gruppen):
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
@@ -214,6 +217,18 @@ class XBeeDBAccessControler:
         conn.commit()
         conn.close()
 
+    def check_for_access(self, user):
+        print(user)
+        print("in check_for_access")
+        # simple check only for access
+        conn = sqlite3.connect(self.dbName)
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": user.userKey})
+        foundUser = cur.fetchone()
+        # user muss 100 % vorhanden sein da es sonst kein user object geben kann
+        print(foundUser)
+        return foundUser[2]
+
     def __init__(self, dbName):
         self.dbName = dbName
 
@@ -222,7 +237,7 @@ class Benutzer:
     nachname = ""
     access = 0
     userKey = b''
-    gruppen = ""
+    gruppen = []
     def __str__(self):
         return (self.vorname + " " + self.nachname)
     def __init__(self, vorname, nachname, access, userKey, gruppen):
@@ -231,6 +246,8 @@ class Benutzer:
         self.userKey = userKey
         self.access = access
         self.gruppen = gruppen
+        if gruppen == "" or gruppen == " ":
+            self.gruppen = []
     def toJSON(self):
         return {"vorname": self.vorname, "nachname": self.nachname, "access": self.access, "userKey": self.userKey.hex(), "gruppen": self.gruppen}
 
@@ -249,17 +266,19 @@ class Karte:
     name = ""
     kartenID = b''
     userKey = b''
-    gruppen = ""
+    gruppen = []
 
     def __init__(self, kartenID, userKey, name, gruppen):
         self.name = name
         self.kartenID = kartenID
         self.userKey = userKey
         self.gruppen = gruppen
+        if gruppen == "" or gruppen == " ":
+            self.gruppen = []
 
     def toJSON(self):
         return {"name": self.name, "kartenID": self.kartenID.hex(), "userKey": self.userKey.hex(), "gruppen": self.gruppen}
 
     def toJSONString(self):
-        return '"name": "%(name)s", "kartenID": "%(kartenID)s", "userKey": "%(userKey)s","gruppen": %(gruppen)s' %{"name": self.name, "kartenID": self.kartenID.hex(), "userKey": self.userKey.hex(), "gruppen": self.gruppen.replace("'", '"')}
+        return '"name": "%(name)s", "kartenID": "%(kartenID)s", "userKey": "%(userKey)s","gruppen": %(gruppen)s' %{"name": self.name, "kartenID": self.kartenID.hex(), "userKey": self.userKey.hex(), "gruppen": str(self.gruppen).replace("'", '"')}
         

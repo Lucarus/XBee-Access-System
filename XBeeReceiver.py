@@ -48,16 +48,30 @@ def dataReceived(data):
                 # anfrage an Datenbank
                 user = dbAccessControler.whoIs(cardID)
                 print(user)
+                
                 # timestap wenn karte gesannt wurde
                 dbAccessControler.addTimestamp(cardID)
 
+                # zugriff abfragem
+                access = dbAccessControler.check_for_access(user)
+
                 # Datei erstellen um im websocket anzuzeigen
                 scanned = open("scanned.json", mode='w')
-                scanned.write('''{"benutzer": %(userInfo)s}''' %{"userInfo": str(user.toJSON()).replace("'", '"')})
+                scanned.write('''{"benutzer": %(userInfo)s, "access": %(access)s}''' %{"userInfo": str(user.toJSON()).replace("'", '"'), "access": access})
                 scanned.close()
 
                 # is access granted ?
-                # check_for_access()
+                if access:
+                    xbee.remote_at(
+                        dest_addr=b'\x1E\x40',
+                        command=b'D0',
+                        parameter=b'\x04')
+                    time.sleep(3)
+                    xbee.remote_at(
+                        dest_addr=b'\x1E\x40',
+                        command=b'D0',
+                        parameter=b'\x05')
+
             except LookupError as error:
                 print(str(error))
 
