@@ -230,15 +230,12 @@ class XBeeDBAccessControler:
         conn.close()
 
     def check_for_access(self, user):
-        print(user)
-        print("in check_for_access")
         # simple check only for access
         conn = sqlite3.connect(self.dbName)
         cur = conn.cursor()
         cur.execute("SELECT * FROM benutzer WHERE userKey=:userKey", {"userKey": user.userKey})
         foundUser = cur.fetchone()
         # user muss 100 % vorhanden sein da es sonst kein user object geben kann
-        print(foundUser)
         return foundUser[2]
 
     def __init__(self, dbName):
