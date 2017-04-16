@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import os.path
+import sys
 
 async def time(websocket, path):
     while True:
