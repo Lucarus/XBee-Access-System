@@ -4,10 +4,10 @@ from XBeeDBAccessControler import XBeeDBAccessControler, Benutzer, Karte, Gruppe
 
 # Instanz eines DB Controlers erstellen
 dbAccessControler = XBeeDBAccessControler("accessControl.db")
-
-# Variabeln für das arbeiten mit dem Thread
 nextInstruction = {"action": "justStarted", "parameter": {"vorname": "", "nachname": "", "kartenname": "", "gruppen": ""}}
 cardResponse = {"responce": "NIX"}
+
+powerTime = 2
 
 def dataReceived(data):
     recData = data['rf_data']
@@ -61,16 +61,17 @@ def dataReceived(data):
                 scanned.close()
 
                 # is access granted ?
+                print(access)
                 if access:
                     xbee.remote_at(
                         dest_addr=b'\x1E\x40',
                         command=b'D0',
-                        parameter=b'\x04')
-                    time.sleep(3)
+                        parameter=b'\x05')
+                    time.sleep(powerTime)
                     xbee.remote_at(
                         dest_addr=b'\x1E\x40',
                         command=b'D0',
-                        parameter=b'\x05')
+                        parameter=b'\x04')
 
             except LookupError as error:
                 print(str(error))
@@ -109,11 +110,15 @@ def writeResponse():
         myResponse.close()
         cardResponse['responce'] = "NIX"
 
+# parameter verwenden
 port = None
-#check for Comport
-if (len(sys.argv) == 2):
+if (len(sys.argv) > 1):
     port = sys.argv[1]
-else:
+    powerTime = 2
+if len(sys.argv) > 2:
+    powerTime = int(sys.argv[2])
+    
+if len(sys.argv) == 1:
     print("COM-Port angeben !")
     sys.exit(0)
 
