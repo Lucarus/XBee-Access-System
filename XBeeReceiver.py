@@ -48,7 +48,7 @@ def dataReceived(data):
                 # anfrage an Datenbank
                 user = dbAccessControler.whoIs(cardID)
                 print(user)
-                
+
                 # timestap wenn karte gesannt wurde
                 dbAccessControler.addTimestamp(cardID)
 
@@ -63,11 +63,13 @@ def dataReceived(data):
                 # is access granted ?
                 print(access)
                 if access:
+                    # send high to digital Pin0 of 3. Xbee
                     xbee.remote_at(
                         dest_addr=b'\x1E\x40',
                         command=b'D0',
                         parameter=b'\x05')
                     time.sleep(powerTime)
+                    # put pin low again after some time
                     xbee.remote_at(
                         dest_addr=b'\x1E\x40',
                         command=b'D0',
@@ -117,7 +119,7 @@ if (len(sys.argv) > 1):
     powerTime = 2
 if len(sys.argv) > 2:
     powerTime = int(sys.argv[2])
-    
+
 if len(sys.argv) == 1:
     print("COM-Port angeben !")
     sys.exit(0)
