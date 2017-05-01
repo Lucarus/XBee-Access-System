@@ -11,6 +11,8 @@ async def time(websocket, path):
             scanned.close()
             os.remove("scanned.json")
             await websocket.send(scannedFile)
+        elif os.path.exists("stopsocket.json"):
+            asyncio.stop()
         await asyncio.sleep(1)
 
 host = '127.0.0.1'
