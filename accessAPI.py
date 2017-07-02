@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time
 import sys
 import os.path
@@ -46,7 +47,7 @@ def createBenutzer():
     else:
         groupNames = ""
 
-    print(groupNames)
+    #print(groupNames)
 
     try:
         user = dbAccessControler.createUser(vorname, nachname, access, groupNames)
@@ -225,7 +226,7 @@ def getAllAccesstimes():
     else:
         groupNames = ""
 
-    print(groupNames)
+    #print(groupNames)
 
     try:
         user = dbAccessControler.updateUser(vorname, nachname, access, groupNames)
